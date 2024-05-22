@@ -1,0 +1,9 @@
+{
+    "rango_min": 70,
+    "rango_max": 100,
+    "probabilidad_correctos": 0.6,
+    "probabilidad_fuera_rango": 0.3,
+    "probabilidad_errores": 0.1,
+    "frecuencia": 5
+  }
+  

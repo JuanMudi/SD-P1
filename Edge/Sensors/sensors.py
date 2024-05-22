@@ -86,46 +86,48 @@ def take_measurement(config):
 
 
 def sensor_thread(sensor_type, config, sensor_id):
-        
     logging.info(f"Starting thread for {sensor_type} (ID: {sensor_id})...")
-    
-    #Wait a random time before starting
-    time.sleep(random.uniform(0, 5)) 
-    
-    # Take a measurement
-    if sensor_type == "Smoke":
-        measurement = take_smoke_measurement(config)
-    else:
-        measurement = take_measurement(config)
-    time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Generate the message
-    message = {
-        "message_type": "measurement",
-        "sensor_type": sensor_type,
-        "measurement": measurement,
-        "time": time_now,
-        "route" : "Edge-Fog"
-    }
-
-    # Send the measurement to the proxy
-    try:
-        proxy_socket.send_json(message, zmq.NOBLOCK)
-        logging.info(f"[{message["time"]}] {message["sensor_type"]}: {measurement}")  # Log the measurement
+    while True:
         
-        if(sensor_type=="Smoke" and measurement==True):
-            quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
-            proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+        
+        #Wait a random time before starting
+        time.sleep(random.uniform(0, 5)) 
+        
+        # Take a measurement
+        if sensor_type == "Smoke":
+            measurement = take_smoke_measurement(config)
+        else:
+            measurement = take_measurement(config)
+        time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            response = quality_system_socket.recv_json()
-            logging.info(f"Alert status: {response}")
+        # Generate the message
+        message = {
+            "message_type": "measurement",
+            "sensor_type": sensor_type,
+            "measurement": measurement,
+            "time": time_now,
+            "route" : "Edge-Fog"
+        }
 
-    except zmq.error.Again:
-        logging.error(f"Error sending message to proxy")
+        # Send the measurement to the proxy
+        try:
+            proxy_socket.send_json(message, zmq.NOBLOCK)
+            logging.info(f"[{message["time"]}] {message["sensor_type"]}: {measurement}")  # Log the measurement
+            
+            if(sensor_type=="Smoke" and measurement==True):
+                quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+                proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+
+                response = quality_system_socket.recv_json()
+                logging.info(f"Alert status: {response}")
+
+        except zmq.error.Again:
+            logging.error(f"Error sending message to proxy")
 
 
-    # Wait for the next measurement
-    time.sleep(config["frecuencia"])
+        # Wait for the next measurement
+        time.sleep(config["frecuencia"])
 
 def main(sensor_type, num_threads, config_files):
     logging.info("...Starting threads...")

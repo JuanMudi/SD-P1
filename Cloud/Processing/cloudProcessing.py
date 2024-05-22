@@ -1,3 +1,4 @@
+import argparse
 import logging
 from sys import getsizeof
 import threading
@@ -56,6 +57,8 @@ def __init__():
 
 def processing_system_cloud():
     __init__()
+    global message_counter
+    global messages_size
 
     logging.info("Starting processing system in the cloud layer...")
     try:
@@ -93,6 +96,25 @@ def processing_system_cloud():
     
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Cloud processing system")
+    parser.add_argument("--reset", type=str, required=False, choices=["True"], help="Reset the database")
+    
+
+    args = parser.parse_args()
+
+    if args.reset == "True":
+
+        collections = db.list_collection_names()
+        
+        # Dropear todas las colecciones
+        for collection_name in collections:
+            db.drop_collection(collection_name)
+            print(f"Dropped collection: {collection_name}")
+
+        print("All collections dropped successfully.")
+
+
+
     main_proxy_socket_thread = threading.Thread(target=processing_system_cloud)
     main_proxy_socket_thread.start()
     main_proxy_socket_thread.join()

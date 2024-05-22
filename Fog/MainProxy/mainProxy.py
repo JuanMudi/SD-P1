@@ -27,7 +27,7 @@ def __init__():
     quality_system_connect_address = "tcp://localhost:5580"
 
     global cloud_connect_address
-    cloud_connect_address = "tcp://54.92.238.228:5556"
+    cloud_connect_address = "tcp://54.92.238.228:5581"
 
     global context
     context = zmq.Context()

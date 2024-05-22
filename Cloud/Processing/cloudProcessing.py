@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pickle
 from sys import getsizeof
 import threading
 import time
@@ -95,15 +96,15 @@ def processing_system_cloud():
                 if message["sensor_type"] == "Temperature":
                     data = list(temperature_collection.find().sort("timestamp", -1).limit(10))
                     logging.info(f"Data obtained from MongoDB: {data}")
-                    fog_layer_socket.send_serialized(data)
                 elif message["sensor_type"] == "Humidity":
                     data = list(humidity_collection.find().sort("timestamp", -1).limit(10))
                     logging.info(f"Data obtained from MongoDB: {data}")
-                    fog_layer_socket.send_serialized(data)
                 elif message["sensor_type"] == "Smoke":
                     data = list(smoke_collection.find().sort("timestamp", -1).limit(10))
                     logging.info(f"Data obtained from MongoDB: {data}")
-                    fog_layer_socket.send_serialized(data)
+                    
+                serialized_data = pickle.dumps(data)
+                fog_layer_socket.send(serialized_data)
 
         except zmq.Again as e:
             time.sleep(1)

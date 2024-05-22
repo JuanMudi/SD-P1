@@ -13,7 +13,7 @@ def __init__():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
     global proxy_bind_address
-    proxy_bind_address = "tcp://*:5555"
+    proxy_bind_address = "tcp://localhost:5555"
 
     global quality_system_connect_address
     quality_system_connect_address = "tcp://localhost:5556"
@@ -34,7 +34,7 @@ def __init__():
         quality_system_socket.connect(quality_system_connect_address)
 
         proxy_socket = context.socket(zmq.PUSH)
-        proxy_socket.bind(proxy_bind_address)
+        proxy_socket.connect(proxy_bind_address)
 
     except Exception as e:
         logging.error(f"Error creating sockets: " + str(e))

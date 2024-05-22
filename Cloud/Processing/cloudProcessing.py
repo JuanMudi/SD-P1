@@ -33,6 +33,7 @@ def initialize():
     global temperature_collection
     global humidity_collection
     global smoke_collection
+    global time_collection
     global message_counter
     global messages_size
 
@@ -50,6 +51,7 @@ def initialize():
         temperature_collection = db["temperature"]
         humidity_collection = db["humidity"]
         smoke_collection = db["smoke"]
+        time_collection = db["time"]
 
     except Exception as e:
         logging.error(f"Error creating sockets: {e}")
@@ -74,6 +76,9 @@ def processing_system_cloud():
                 alerts_collection.insert_one(message)                
                 fog_layer_socket.send_json({"status": "received"})
 
+            elif message["message_type"] == "communication_time":
+                time_collection.insert_one(message)
+                fog_layer_socket.send_json({"status": "received"})
 
             elif message["message_type"] == "measurement":
                 message_counter += 1

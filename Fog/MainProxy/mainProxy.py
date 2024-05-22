@@ -13,24 +13,23 @@ RANGO_MIN_HUMEDAD = 70.0
 RANGO_MAX_HUMEDAD = 100.0
 
 def initialize():
-    global context, sensor_connect_socket, quality_system_socket, cloud_connect_socket, health_system_socket
+    global context, sensor_bind_socket, quality_system_socket, cloud_connect_socket, health_system_socket
 
     # Logs configuration
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    sensor_connect_address = "tcp://localhost:5555"
+    sensor_bind_address = "tcp://*:5555"
     health_system_connect_address = "tcp://localhost:5558"
     quality_system_connect_address = "tcp://localhost:5580"
     cloud_connect_address = "tcp://54.92.238.228:5581"
 
     context = zmq.Context()
-
     try:
         logging.info("Starting main proxy...")
 
         # Create the socket to connect to the sensors
-        sensor_connect_socket = context.socket(zmq.PULL)
-        sensor_connect_socket.connect(sensor_connect_address)
+        sensor_bind_socket = context.socket(zmq.PULL)
+        sensor_bind_socket.bind(sensor_bind_address)
 
         quality_system_socket = context.socket(zmq.REQ)
         quality_system_socket.connect(quality_system_connect_address)
@@ -46,6 +45,7 @@ def initialize():
 
 def send_data(data):
     try:
+        start_time = time.time()
         if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
             cloud_connect_socket.send_json(data)
             cloud_connect_socket.recv_json()
@@ -58,6 +58,12 @@ def send_data(data):
             cloud_connect_socket.send_json(data)
             cloud_connect_socket.recv_json()
             analyze_data(obtain_data("Smoke"), "Smoke")
+        end_time = time.time()
+        communication_time = end_time - start_time
+        cloud_connect_socket.send_json({"message_type": "communication_time", "time": communication_time})
+        cloud_connect_socket.recv_json()
+        
+
     except Exception as e:
         logging.error(f"Error sending data: {e}")
 
@@ -95,7 +101,7 @@ def analyze_data(data, sensor):
                 logging.info(f"The humidity average is WRONG: {promedio}")
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
-                cloud_connect_socket.send_json({"message_type": "alert","sensor_type": sensor, "measurement": promedio, "status": "incorrecto"})
+                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto"})
                 response_cloud = cloud_connect_socket.recv_json()
                 logging.info(f"Quality system response: {response}")
                 logging.info(f"Cloud response: {response_cloud}")
@@ -115,7 +121,7 @@ def main():
     while True:
         logging.info("Waiting for data...")
         try:
-            message = sensor_connect_socket.recv_json()
+            message = sensor_bind_socket.recv_json()
             logging.info(f"Message: {message}")
             send_data(message)
         except zmq.Again:
@@ -139,7 +145,7 @@ if __name__ == "__main__":
         logging.info("Keyboard interrupt detected. Closing the ZeroMQ context.")
     finally:
         logging.info("Closing sockets...")
-        sensor_connect_socket.close()
+        sensor_bind_socket.close()
         quality_system_socket.close()
         cloud_connect_socket.close()
         health_system_socket.close()

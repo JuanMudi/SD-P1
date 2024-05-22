@@ -20,8 +20,8 @@ def __init__():
     #Logs configuration
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    global sensor_connect_address
-    sensor_connect_address = "tcp://localhost:5555"
+    global sensor_bind_address
+    sensor_bind_address = "tcp://*:5555"
 
     global health_system_bind_address
     health_system_bind_address = "tcp://*:5558"
@@ -36,7 +36,7 @@ def __init__():
     context = zmq.Context()
 
     
-    global sensor_connect_socket
+    global sensor_bind_socket
     global quality_system_socket
     global cloud_connect_socket
     global health_system_socket
@@ -57,6 +57,7 @@ def __init__():
 
 def send_data(data):
     try:
+        start_time = time.time()
         if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
             cloud_connect_socket.send_json(data)
             cloud_connect_socket.recv_json()
@@ -69,8 +70,14 @@ def send_data(data):
             cloud_connect_socket.send_json(data)
             cloud_connect_socket.recv_json()
             analyze_data(obtain_data("Smoke"), "Smoke")
+        end_time = time.time()
+        communication_time = end_time - start_time
+        cloud_connect_socket.send_json({"message_type": "communication_time", "time": communication_time})
+        cloud_connect_socket.recv_json()
+        
+
     except Exception as e:
-        logging.error(f"Error sending data: {e}")  
+        logging.error(f"Error sending data: {e}")
 
 
 def obtain_data(sensor):
@@ -165,14 +172,14 @@ def health_system():
 def main():
     global control
     control = False
-    global sensor_connect_socket
+    global sensor_bind_socket
     global quality_system_socket
     global cloud_connect_socket
 
     try:
         # Create the socket to connect to the sensors
-        sensor_connect_socket = context.socket(zmq.PULL)
-        sensor_connect_socket.connect(sensor_connect_address)
+        sensor_bind_socket = context.socket(zmq.PULL)
+        sensor_bind_socket.bind(sensor_bind_address)
 
         quality_system_socket = context.socket(zmq.REQ)
         quality_system_socket.connect(quality_system_connect_address)
@@ -186,7 +193,7 @@ def main():
                 logging.error("The main proxy is not available. Auxiliar proxy is taking the control.")
                 control = True
             try:
-                message = sensor_connect_socket.recv_json(flags=zmq.NOBLOCK)
+                message = sensor_bind_socket.recv_json(flags=zmq.NOBLOCK)
                 logging.info(f"Message: {message}")
                 send_data(message)
 
@@ -196,7 +203,7 @@ def main():
                 logging.error(f"Error: {e}")
     finally:
         logging.info("Closing sockets...")
-        sensor_connect_socket.close()
+        sensor_bind_socket.close()
         quality_system_socket.close()
         cloud_connect_socket.close()
    

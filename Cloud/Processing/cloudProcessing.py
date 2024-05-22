@@ -90,7 +90,7 @@ def processing_system_cloud():
                     smoke_collection.insert_one(data)
                     logging.info(f"Data save in MongoDB: {data}")
       
-    except zmq.Again as e:
+    except Exception as e:
         logging.error(f"Error receiving alerts: {e}")
     
 

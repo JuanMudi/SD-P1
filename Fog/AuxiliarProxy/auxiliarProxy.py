@@ -76,7 +76,7 @@ def send_data(data):
 def obtain_data(sensor):
     try:
         cloud_connect_socket.send_json({"message_type": "request", "sensor_type": sensor})
-        data = cloud_connect_socket.recv_serialized()      
+        data = cloud_connect_socket.recv_json()      
 
         logging.info(f"Data obtained from cloud: {data}")
         return data

@@ -94,13 +94,13 @@ def processing_system_cloud():
 
             elif message["message_type"] == "request":
                 if message["sensor_type"] == "Temperature":
-                    data = list(temperature_collection.find().sort("timestamp", -1).limit(10))
+                    data = list(temperature_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10))
                     logging.info(f"Data obtained from MongoDB: {data}")
                 elif message["sensor_type"] == "Humidity":
-                    data = list(humidity_collection.find().sort("timestamp", -1).limit(10))
+                    data = list(humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10))
                     logging.info(f"Data obtained from MongoDB: {data}")
                 elif message["sensor_type"] == "Smoke":
-                    data = list(smoke_collection.find().sort("timestamp", -1).limit(10))
+                    data = list(smoke_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10))
                     logging.info(f"Data obtained from MongoDB: {data}")
                     
                 fog_layer_socket.send_json(data)

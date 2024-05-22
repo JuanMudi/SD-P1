@@ -127,7 +127,11 @@ def humidity_mensual_average():
 
     while True:
         try:
+
             data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
+            if data.count() == 0:
+                logging.info(f"No data available for humidity")
+                pass
             promedio = sum(d["measurement"] for d in data) / len(data)
         
             if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
@@ -140,7 +144,6 @@ def humidity_mensual_average():
         
         except Exception as e:
             logging.error(f"Error calculating the monthly average of humidity: {e}")
-            return None
         time.sleep(20)
     
 

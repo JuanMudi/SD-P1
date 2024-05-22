@@ -129,7 +129,7 @@ def humidity_mensual_average():
         try:
 
             data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
-            if data.count() == 0:
+            if len(data) == 0:
                 logging.info(f"No data available for humidity")
                 pass
             promedio = sum(d["measurement"] for d in data) / len(data)

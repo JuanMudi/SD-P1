@@ -58,40 +58,36 @@ def processing_system_cloud():
     global messages_size
 
     logging.info("Starting processing system in the cloud layer...")
-    try:
-        while True:
-            message = fog_layer_socket.recv_json(flags=zmq.NOBLOCK)
-            fog_layer_socket.send_json({"status": "received"})
+        
+    while True:
+        message = fog_layer_socket.recv_json(flags=zmq.NOBLOCK)
+        fog_layer_socket.send_json({"status": "received"})
 
-            if message["message_type"] == "alert":
-                message_counter += 2
-                messages_size += getsizeof(message) * 2
-                logging.info(f"Alerta recibida en la capa cloud: {message}")
-                alerts_collection.insert_one(message)
-                quality_system_socket.send_json(message)
+        if message["message_type"] == "alert":
+            message_counter += 2
+            messages_size += getsizeof(message) * 2
+            logging.info(f"Alerta recibida en la capa cloud: {message}")
+            alerts_collection.insert_one(message)
+            quality_system_socket.send_json(message)
 
-            if message["message_type"] == "measurement":
-                message_counter += 1
-                messages_size += getsizeof(message)
-                logging.info(f"Data received in the cloud layer: {message}")
+        if message["message_type"] == "measurement":
+            message_counter += 1
+            messages_size += getsizeof(message)
+            logging.info(f"Data received in the cloud layer: {message}")
 
-                data = message
+            data = message
 
-                if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
-                    temperature_collection.insert_one(data)
-                    logging.info(f"Data saved in MongoDB: {data}")
+            if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
+                temperature_collection.insert_one(data)
+                logging.info(f"Data saved in MongoDB: {data}")
 
-                elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
-                    humidity_collection.insert_one(data)
-                    logging.info(f"Data saved in MongoDB: {data}")
+            elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
+                humidity_collection.insert_one(data)
+                logging.info(f"Data saved in MongoDB: {data}")
 
-                elif data["sensor_type"] == "Humo":
-                    smoke_collection.insert_one(data)
-                    logging.info(f"Data saved in MongoDB: {data}")
-
-
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+            elif data["sensor_type"] == "Humo":
+                smoke_collection.insert_one(data)
+                logging.info(f"Data saved in MongoDB: {data}")
 
 
 if __name__ == "__main__":

@@ -64,8 +64,7 @@ def send_data(data):
 def obtain_data(sensor):
     try:
         cloud_connect_socket.send_json({"message_type": "request", "sensor_type": sensor})
-        serialized_data = cloud_connect_socket.recv()
-        data = pickle.loads(serialized_data) 
+        data = cloud_connect_socket.recv_json()
         logging.info(f"Data obtained from cloud: {data}")
         return data
     except Exception as e:

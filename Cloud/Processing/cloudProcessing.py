@@ -103,8 +103,7 @@ def processing_system_cloud():
                     data = list(smoke_collection.find().sort("timestamp", -1).limit(10))
                     logging.info(f"Data obtained from MongoDB: {data}")
                     
-                serialized_data = pickle.dumps(data)
-                fog_layer_socket.send(serialized_data)
+                fog_layer_socket.send_json(data)
 
         except zmq.Again as e:
             time.sleep(1)

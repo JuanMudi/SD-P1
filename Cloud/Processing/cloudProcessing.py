@@ -62,7 +62,7 @@ def processing_system_cloud():
     logging.info("Starting processing system in the cloud layer...")
     try:
         while True:
-            message = fog_layer_socket.recv_json(flags=zmq.NOBLOCK)
+            message = fog_layer_socket.recv_json(flags=zmq.BLOCKY)
 
             if message["message_type"] == "alert":
                 message_counter += 2

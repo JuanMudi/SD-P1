@@ -111,11 +111,11 @@ def sensor_thread(sensor_type, config, sensor_id):
     # Send the measurement to the proxy
     try:
         proxy_socket.send_json(message, zmq.NOBLOCK)
-        logging.info(f"[{message.time_now}] {message.sensor_type}: {measurement}")  # Log the measurement
+        logging.info(f"[{message["time"]}] {message["sensor_type"]}: {measurement}")  # Log the measurement
         
         if(sensor_type=="Smoke" and measurement==True):
-            quality_system_socket.send_json({"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
-            proxy_socket.send_json({"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+            quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+            proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto"})
 
             response = quality_system_socket.recv_json()
             logging.info(f"Alert status: {response}")

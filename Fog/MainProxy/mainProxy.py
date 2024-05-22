@@ -48,19 +48,22 @@ def send_data(data):
         if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
             cloud_connect_socket.send_json(data)
             cloud_connect_socket.recv_json()
+            analyze_data(obtain_data("Temperature"), "Temperature")
         elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
             cloud_connect_socket.send_json(data)
             cloud_connect_socket.recv_json()
+            analyze_data(obtain_data("Humidity"), "Humidity")
         elif data["sensor_type"] == "Smoke":
             cloud_connect_socket.send_json(data)
             cloud_connect_socket.recv_json()
+            analyze_data(obtain_data("Smoke"), "Smoke")
     except Exception as e:
         logging.error(f"Error sending data: {e}")
 
 def obtain_data(sensor):
     try:
         cloud_connect_socket.send_json({"message_type": "request", "sensor_type": sensor})
-        data = cloud_connect_socket.recv_json()  # Use recv_json correctly
+        data = cloud_connect_socket.recv_serialized() 
         logging.info(f"Data obtained from cloud: {data}")
         return data
     except Exception as e:
@@ -112,9 +115,9 @@ def main():
         try:
             message = sensor_connect_socket.recv_json()
             logging.info(f"Message: {message}")
-            #send_data(message)
+            send_data(message)
         except zmq.Again:
-            time.sleep(1)
+            pass
         except Exception as e:
             logging.error(f"Error receiving data: {e}")
 

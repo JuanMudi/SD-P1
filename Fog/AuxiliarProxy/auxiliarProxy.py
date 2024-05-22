@@ -56,16 +56,21 @@ def __init__():
         logging.error(f"Error creating sockets: " + str(e))
 
 def send_data(data):
-    if(data["sensor_type"]=="Temperature" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data) 
-        cloud_connect_socket.recv_json()        
-    elif(data["sensor_type"]=="Humidity" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data)   
-        cloud_connect_socket.recv_json()        
-    elif(data["sensor_type"]=="Smoke"):
-        cloud_connect_socket.send_json(data)     
-        cloud_connect_socket.recv_json()     
-    return    
+    try:
+        if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
+            cloud_connect_socket.send_json(data)
+            cloud_connect_socket.recv_json()
+            analyze_data(obtain_data("Temperature"), "Temperature")
+        elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
+            cloud_connect_socket.send_json(data)
+            cloud_connect_socket.recv_json()
+            analyze_data(obtain_data("Humidity"), "Humidity")
+        elif data["sensor_type"] == "Smoke":
+            cloud_connect_socket.send_json(data)
+            cloud_connect_socket.recv_json()
+            analyze_data(obtain_data("Smoke"), "Smoke")
+    except Exception as e:
+        logging.error(f"Error sending data: {e}")  
 
 
 def obtain_data(sensor):

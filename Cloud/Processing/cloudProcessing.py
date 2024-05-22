@@ -72,7 +72,7 @@ def processing_system_cloud():
                 alerts_collection.insert_one(message)
                 quality_system_socket.send_json(message)
 
-            if message["message_type"] == "measurement":
+            elif message["message_type"] == "measurement":
                 message_counter += 1
                 messages_size += getsizeof(message)
                 logging.info(f"Data received in the cloud layer: {message}")
@@ -90,6 +90,20 @@ def processing_system_cloud():
                 elif data["sensor_type"] == "Humo":
                     smoke_collection.insert_one(data)
                     logging.info(f"Data saved in MongoDB: {data}")
+
+            elif message["message_type"] == "request":
+                if message["sensor_type"] == "Temperature":
+                    data = list(temperature_collection.find().sort("timestamp", -1).limit(10))
+                    logging.info(f"Data obtained from MongoDB: {data}")
+                    fog_layer_socket.send_serialized(data)
+                elif message["sensor_type"] == "Humidity":
+                    data = list(humidity_collection.find().sort("timestamp", -1).limit(10))
+                    logging.info(f"Data obtained from MongoDB: {data}")
+                    fog_layer_socket.send_serialized(data)
+                elif message["sensor_type"] == "Smoke":
+                    data = list(smoke_collection.find().sort("timestamp", -1).limit(10))
+                    logging.info(f"Data obtained from MongoDB: {data}")
+                    fog_layer_socket.send_serialized(data)
 
         except zmq.Again as e:
             time.sleep(1)

@@ -59,8 +59,9 @@ def processing_system_cloud():
     global messages_size
 
     logging.info("Starting processing system in the cloud layer...")
-    try:
-        while True:
+    while True:
+        try:
+
             message = fog_layer_socket.recv_json(flags=zmq.NOBLOCK)
             fog_layer_socket.send_json({"status": "received"})
 
@@ -90,12 +91,12 @@ def processing_system_cloud():
                     smoke_collection.insert_one(data)
                     logging.info(f"Data saved in MongoDB: {data}")
 
-    except zmq.Again as e:
-        time.sleep(1)
-    except zmq.ZMQError as e:
-        logging.error(f"Error: {e}")
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        except zmq.Again as e:
+            time.sleep(1)
+        except zmq.ZMQError as e:
+            logging.error(f"Error: {e}")
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
 
 
 if __name__ == "__main__":

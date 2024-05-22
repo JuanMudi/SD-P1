@@ -64,7 +64,6 @@ def processing_system_cloud():
         try:
 
             message = fog_layer_socket.recv_json(flags=zmq.NOBLOCK)
-            fog_layer_socket.send_json({"status": "received"})
 
             if message["message_type"] == "alert":
                 message_counter += 2
@@ -72,11 +71,15 @@ def processing_system_cloud():
                 logging.info(f"Alerta recibida en la capa cloud: {message}")
                 alerts_collection.insert_one(message)
                 quality_system_socket.send_json(message)
+                fog_layer_socket.send_json({"status": "received"})
+
 
             elif message["message_type"] == "measurement":
                 message_counter += 1
                 messages_size += getsizeof(message)
                 logging.info(f"Data received in the cloud layer: {message}")
+                fog_layer_socket.send_json({"status": "received"})
+
 
                 data = message
 
@@ -95,14 +98,12 @@ def processing_system_cloud():
             elif message["message_type"] == "request":
                 if message["sensor_type"] == "Temperature":
                     data = temperature_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10)
-                    logging.info(f"Data obtained from MongoDB: {data}")
                 elif message["sensor_type"] == "Humidity":
                     data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10)
-                    logging.info(f"Data obtained from MongoDB: {data}")
                 elif message["sensor_type"] == "Smoke":
                     data = smoke_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10)
-                    logging.info(f"Data obtained from MongoDB: {data}")
-                    
+                
+                logging.info(f"Data obtained from MongoDB: {data}")    
                 fog_layer_socket.send_json(data)
 
         except zmq.Again as e:

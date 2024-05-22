@@ -69,9 +69,9 @@ def processing_system_cloud():
                 message_counter += 2
                 messages_size += getsizeof(message) * 2
                 logging.info(f"Alerta recibida en la capa cloud: {message}")
-                alerts_collection.insert_one(message)
                 quality_system_socket.send_json(message)
                 quality_system_socket.recv_json()
+                alerts_collection.insert_one(message)                
                 fog_layer_socket.send_json({"status": "received"})
 
 

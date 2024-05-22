@@ -56,7 +56,6 @@ def __init__():
 
 
 def processing_system_cloud():
-    __init__()
     global message_counter
     global messages_size
 
@@ -96,6 +95,8 @@ def processing_system_cloud():
     
 
 if __name__ == "__main__":
+    __init__()
+
     parser = argparse.ArgumentParser(description="Cloud processing system")
     parser.add_argument("--reset", type=str, required=False, choices=["True"], help="Reset the database")
     
@@ -105,7 +106,7 @@ if __name__ == "__main__":
     if args.reset == "True":
 
         collections = db.list_collection_names()
-        
+
         # Dropear todas las colecciones
         for collection_name in collections:
             db.drop_collection(collection_name)

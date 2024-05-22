@@ -104,8 +104,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.reset == "True":
-        client.drop_database()
-        print("All collections dropped successfully.")
+        client.drop_database("sensorsData")
+        print("Database 'sensorsData' dropped successfully.")
 
 
 

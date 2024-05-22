@@ -10,7 +10,7 @@ def __init__():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     global quality_system_connect_address
-    quality_system_connect_address = "tcp://*:5580"
+    quality_system_connect_address = "tcp://localhost:5580"
 
     global quality_system_socket
     quality_system_socket = zmq.Context().socket(zmq.REQ)
@@ -54,10 +54,10 @@ def __init__():
         logging.error(f"Error creating sockets: " + str(e))
 
 
-def quality_system_cloud():
+def processing_system_cloud():
     __init__()
 
-    logging.info("Starting quality system in the cloud layer...")
+    logging.info("Starting processing system in the cloud layer...")
     try:
         while True:
             message = fog_layer_socket.recv_json(flags=zmq.BLOCKY)
@@ -93,6 +93,6 @@ def quality_system_cloud():
     
 
 if __name__ == "__main__":
-    main_proxy_socket_thread = threading.Thread(target=quality_system_cloud)
+    main_proxy_socket_thread = threading.Thread(target=processing_system_cloud)
     main_proxy_socket_thread.start()
     main_proxy_socket_thread.join()

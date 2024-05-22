@@ -6,8 +6,8 @@ from pymongo import MongoClient
 import zmq
 
 
-def __init__():
-    #Logs configuration
+def initialize():
+    # Logs configuration
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     global quality_system_connect_address
@@ -29,15 +29,13 @@ def __init__():
     global client
     global alerts_collection
     global temperature_collection
-    global humidity_collection 
-    global smoke_collection 
+    global humidity_collection
+    global smoke_collection
     global message_counter
     global messages_size
 
     message_counter = 0
     messages_size = 0
-    
-    
 
     try:
         quality_system_socket.connect(quality_system_connect_address)
@@ -49,10 +47,10 @@ def __init__():
         alerts_collection = db["alerts"]
         temperature_collection = db["temperature"]
         humidity_collection = db["humidity"]
-        smoke_collection = db["smoke"] 
+        smoke_collection = db["smoke"]
 
     except Exception as e:
-        logging.error(f"Error creating sockets: " + str(e))
+        logging.error(f"Error creating sockets: {e}")
 
 
 def processing_system_cloud():
@@ -62,52 +60,51 @@ def processing_system_cloud():
     logging.info("Starting processing system in the cloud layer...")
     try:
         while True:
-            message = fog_layer_socket.recv_json(flags=zmq.BLOCKY)
+            message = fog_layer_socket.recv_json()
 
             if message["message_type"] == "alert":
                 message_counter += 2
                 messages_size += getsizeof(message) * 2
                 logging.info(f"Alerta recibida en la capa cloud: {message}")
                 alerts_collection.insert_one(message)
-                quality_system_socket.send_json({message})
+                quality_system_socket.send_json(message)
 
             if message["message_type"] == "measurement":
                 message_counter += 1
                 messages_size += getsizeof(message)
-                logging.info(f"Data recieve in the cloud layer: {message}")
+                logging.info(f"Data received in the cloud layer: {message}")
 
                 data = message
 
-                if(data["sensor_type"]=="Temperature" and data["measurement"] != -1):
+                if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
                     temperature_collection.insert_one(data)
-                    logging.info(f"Data save in MongoDB: {data}")
+                    logging.info(f"Data saved in MongoDB: {data}")
 
-                elif(data["sensor_type"]=="Humidity" and data["measurement"] != -1):
+                elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
                     humidity_collection.insert_one(data)
-                    logging.info(f"Data save in MongoDB: {data}")
+                    logging.info(f"Data saved in MongoDB: {data}")
 
-                elif(data["sensor_type"]=="Humo"):
+                elif data["sensor_type"] == "Humo":
                     smoke_collection.insert_one(data)
-                    logging.info(f"Data save in MongoDB: {data}")
-      
+                    logging.info(f"Data saved in MongoDB: {data}")
+
     except zmq.ZMQError as e:
         logging.error(f"Error: {e}")
-    
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+
 
 if __name__ == "__main__":
-    __init__()
+    initialize()
 
     parser = argparse.ArgumentParser(description="Cloud processing system")
     parser.add_argument("--reset", type=str, required=False, choices=["True"], help="Reset the database")
-    
 
     args = parser.parse_args()
 
     if args.reset == "True":
         client.drop_database("sensorsData")
         print("Database 'sensorsData' dropped successfully.")
-
-
 
     main_proxy_socket_thread = threading.Thread(target=processing_system_cloud)
     main_proxy_socket_thread.start()

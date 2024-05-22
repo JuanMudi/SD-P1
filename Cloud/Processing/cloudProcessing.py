@@ -89,10 +89,7 @@ def processing_system_cloud():
                     smoke_collection.insert_one(data)
                     logging.info(f"Data saved in MongoDB: {data}")
 
-    except zmq.ZMQError as e:
-        if e.errno == zmq.EAGAIN:
-            pass
-        logging.error(f"Error: {e}")
+
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
 

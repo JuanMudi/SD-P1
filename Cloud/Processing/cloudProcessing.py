@@ -72,6 +72,7 @@ def processing_system_cloud():
                 alerts_collection.insert_one(message)
                 quality_system_socket.send_json(message)
                 fog_layer_socket.send_json({"status": "received"})
+                logging.info(f"Alerta enviada a la capa de calidad: {message}")
 
 
             elif message["message_type"] == "measurement":

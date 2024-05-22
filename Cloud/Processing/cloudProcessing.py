@@ -61,6 +61,7 @@ def processing_system_cloud():
     try:
         while True:
             message = fog_layer_socket.recv_json(flags=zmq.NOBLOCK)
+            fog_layer_socket.send_json({"status": "received"})
 
             if message["message_type"] == "alert":
                 message_counter += 2

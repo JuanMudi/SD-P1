@@ -62,11 +62,15 @@ def __init__():
 
 def send_data(data):
     if(data["sensor_type"]=="Temperature" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data)         
+        cloud_connect_socket.send_json(data) 
+        cloud_connect_socket.recv_json()        
     elif(data["sensor_type"]=="Humidity" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data)         
+        cloud_connect_socket.send_json(data)   
+        cloud_connect_socket.recv_json()        
     elif(data["sensor_type"]=="Smoke"):
-        cloud_connect_socket.send_json(data)         
+        cloud_connect_socket.send_json(data)     
+        cloud_connect_socket.recv_json()        
+    
 
 
 def obtain_data(sensor):
@@ -150,7 +154,7 @@ def main():
     logging.info("Waiting for data...")
     while True:
         try:
-            message = sensor_connect_socket.recv_json(flags=zmq.BLOCKY)
+            message = sensor_connect_socket.recv_json(flags=zmq.NOBLOCK)
             logging.info(f"Message: {message}")
             send_data(message)
 

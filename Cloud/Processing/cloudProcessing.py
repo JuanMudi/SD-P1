@@ -129,19 +129,18 @@ def humidity_mensual_average():
         try:
 
             data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
-            if  len(list(data)) == 0:
-                logging.info(f"No data available for humidity")
-                pass
-            promedio = sum(d["measurement"] for d in data) / len(data)
-        
-            if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
-                    logging.info(f"The humidity average is OK: {promedio}")
-            else:
-                logging.info(f"The humidity average is WRONG: {promedio}")
-                quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": "Humidity"})
-                response = quality_system_socket.recv_json()
-                logging.info(f"Quality system response: {response}")    
-        
+            if  len(list(data)) != 0:
+               
+                promedio = sum(d["measurement"] for d in data) / len(data)
+            
+                if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
+                        logging.info(f"The humidity average is OK: {promedio}")
+                else:
+                    logging.info(f"The humidity average is WRONG: {promedio}")
+                    quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": "Humidity"})
+                    response = quality_system_socket.recv_json()
+                    logging.info(f"Quality system response: {response}")    
+            
         except Exception as e:
             logging.error(f"Error calculating the monthly average of humidity: {e}")
         time.sleep(20)

@@ -63,7 +63,7 @@ def processing_system_cloud():
     while True:
         try:
 
-            message = fog_layer_socket.recv_json(flags=zmq.NOBLOCK)
+            message = fog_layer_socket.recv_json()
 
             if message["message_type"] == "alert":
                 message_counter += 2
@@ -79,7 +79,6 @@ def processing_system_cloud():
                 messages_size += getsizeof(message)
                 logging.info(f"Data received in the cloud layer: {message}")
                 fog_layer_socket.send_json({"status": "received"})
-
 
                 data = message
 

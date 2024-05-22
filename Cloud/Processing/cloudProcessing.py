@@ -102,8 +102,9 @@ def processing_system_cloud():
                 elif message["sensor_type"] == "Smoke":
                     data = smoke_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10)
                 
-                logging.info(f"Data obtained from MongoDB: {data}")    
-                fog_layer_socket.send_json(data)
+                logging.info(f"Data obtained from MongoDB: {data}")   
+
+                fog_layer_socket.send_json(list(data))
 
         except zmq.Again as e:
             time.sleep(1)

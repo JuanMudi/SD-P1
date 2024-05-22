@@ -45,7 +45,7 @@ def __init__():
 
         # Crear un cliente y conectarse al servidor
         client = MongoClient(database_connect_address)
-        db = client["sensorsAlerts"]
+        db = client["sensorsData"]
         alerts_collection = db["alerts"]
         temperature_collection = db["temperature"]
         humidity_collection = db["humidity"]

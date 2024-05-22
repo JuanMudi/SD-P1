@@ -112,7 +112,7 @@ def sensor_thread(sensor_type, config, sensor_id):
 
         # Send the measurement to the proxy
         try:
-            proxy_socket.send_json(message, zmq.NOBLOCK)
+            proxy_socket.send_json(message)
             logging.info(f"[{message["time"]}] {message["sensor_type"]}: {measurement}")  # Log the measurement
             
             if(sensor_type=="Smoke" and measurement==True):

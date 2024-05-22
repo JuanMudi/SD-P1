@@ -11,34 +11,18 @@ RANGO_MAX_TEMPERATURA = 29.4
 RANGO_MIN_HUMEDAD = 70.0
 RANGO_MAX_HUMEDAD = 100.0
 
+def initialize():
+    global context, sensor_connect_socket, quality_system_socket, cloud_connect_socket, health_system_socket
 
-def __init__():
-
-    #Logs configuration
+    # Logs configuration
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    global sensor_connect_address
     sensor_connect_address = "tcp://localhost:5555"
-
-    global health_system_connect_address
     health_system_connect_address = "tcp://localhost:5558"
-
-    global quality_system_connect_address
     quality_system_connect_address = "tcp://localhost:5580"
-
-    global cloud_connect_address
     cloud_connect_address = "tcp://54.92.238.228:5581"
 
-    global context
     context = zmq.Context()
-
-    
-    global sensor_connect_socket
-    global quality_system_socket
-    global cloud_connect_socket
-    global health_system_socket
-
-
 
     try:
         logging.info("Starting main proxy...")
@@ -56,89 +40,62 @@ def __init__():
         health_system_socket = context.socket(zmq.PUSH)
         health_system_socket.connect(health_system_connect_address)
 
-
     except Exception as e:
-        logging.error(f"Error creating sockets: " + str(e))
+        logging.error(f"Error creating sockets: {e}")
 
 def send_data(data):
-    if(data["sensor_type"]=="Temperature" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data) 
-        cloud_connect_socket.recv_json()        
-    elif(data["sensor_type"]=="Humidity" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data)   
-        cloud_connect_socket.recv_json()        
-    elif(data["sensor_type"]=="Smoke"):
-        cloud_connect_socket.send_json(data)     
-        cloud_connect_socket.recv_json()        
-    
-
+    try:
+        if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
+            cloud_connect_socket.send_json(data)
+            cloud_connect_socket.recv_json()
+        elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
+            cloud_connect_socket.send_json(data)
+            cloud_connect_socket.recv_json()
+        elif data["sensor_type"] == "Smoke":
+            cloud_connect_socket.send_json(data)
+            cloud_connect_socket.recv_json()
+    except Exception as e:
+        logging.error(f"Error sending data: {e}")
 
 def obtain_data(sensor):
     try:
         cloud_connect_socket.send_json({"message_type": "request", "sensor_type": sensor})
-        data = cloud_connect_socket.recv_serialized()      
-
+        data = cloud_connect_socket.recv_json()  # Use recv_json correctly
         logging.info(f"Data obtained from cloud: {data}")
         return data
     except Exception as e:
         logging.error(f"Error obtaining data: {e}")
         return None
 
-
 def analyze_data(data, sensor):
     try:
         documents_list = list(data)
-        if(sensor=="Temperature"):
-            promedio = 0.0
-            for d in documents_list:
-                promedio += d["measurement"]
-            promedio = promedio/len(documents_list)
-
-            if(promedio>=RANGO_MIN_TEMPERATURA and promedio<=RANGO_MAX_TEMPERATURA):
+        if sensor == "Temperature":
+            promedio = sum(d["measurement"] for d in documents_list) / len(documents_list)
+            if RANGO_MIN_TEMPERATURA <= promedio <= RANGO_MAX_TEMPERATURA:
                 logging.info(f"The temperature average is OK: {promedio}")
             else:
-                # Send alert to the quality system in the Fog layer
                 logging.info(f"The temperature average is WRONG: {promedio}")
-
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
-
-
-                # Send alert to the cloud
                 cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto"})
                 response_cloud = cloud_connect_socket.recv_json()
-
-
                 logging.info(f"Quality system response: {response}")
                 logging.info(f"Cloud response: {response_cloud}")
-
-        elif(sensor=="Humidity"):
-            promedio = 0.0
-            for d in documents_list:
-                promedio += d["measurement"]
-            promedio = promedio/len(documents_list)
-
-            if(promedio>=RANGO_MIN_HUMEDAD and promedio<=RANGO_MAX_HUMEDAD):
+        elif sensor == "Humidity":
+            promedio = sum(d["measurement"] for d in documents_list) / len(documents_list)
+            if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
                 logging.info(f"The humidity average is OK: {promedio}")
             else:
-                # Send alert to the quality system in the Fog layer
                 logging.info(f"The humidity average is WRONG: {promedio}")
-
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
-
-
-                # Send alert to the cloud
                 cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto"})
                 response_cloud = cloud_connect_socket.recv_json()
-
-
                 logging.info(f"Quality system response: {response}")
                 logging.info(f"Cloud response: {response_cloud}")
-                    
-    
     except Exception as e:
-        logging.error(f"Error: {e}")
+        logging.error(f"Error analyzing data: {e}")
 
 def send_heartbeat():
     while True:
@@ -148,22 +105,22 @@ def send_heartbeat():
             logging.error(f"Failure sending the heartbeat: {e}")
         time.sleep(1)
 
-    
-
 def main():
     logging.info("Waiting for data...")
     while True:
+        logging.info("Waiting for data...")
         try:
-            message = sensor_connect_socket.recv_json(flags=zmq.NOBLOCK)
+            message = sensor_connect_socket.recv_json()
             logging.info(f"Message: {message}")
-            send_data(message)
-
+            #send_data(message)
+        except zmq.Again:
+            time.sleep(1)
         except Exception as e:
             logging.error(f"Error receiving data: {e}")
-   
 
 if __name__ == "__main__":
-    __init__()
+    initialize()
+    
     main_thread = threading.Thread(target=main)
     main_thread.start()
 
@@ -182,5 +139,3 @@ if __name__ == "__main__":
         cloud_connect_socket.close()
         health_system_socket.close()
         context.term()
-
-

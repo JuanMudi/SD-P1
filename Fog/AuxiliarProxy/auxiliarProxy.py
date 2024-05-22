@@ -46,16 +46,6 @@ def __init__():
     try:
         logging.info("Creating connections")
 
-        # Create the socket to connect to the sensors
-        sensor_connect_socket = context.socket(zmq.PULL)
-        sensor_connect_socket.connect(sensor_connect_address)
-
-        quality_system_socket = context.socket(zmq.REQ)
-        quality_system_socket.connect(quality_system_connect_address)
-
-        cloud_connect_socket = context.socket(zmq.REQ)
-        cloud_connect_socket.connect(cloud_connect_address)
-
         health_system_socket = context.socket(zmq.PULL)
         health_system_socket.bind(health_system_bind_address)
         logging.info("Finished creating connections")
@@ -67,11 +57,15 @@ def __init__():
 
 def send_data(data):
     if(data["sensor_type"]=="Temperature" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data)         
+        cloud_connect_socket.send_json(data) 
+        cloud_connect_socket.recv_json()        
     elif(data["sensor_type"]=="Humidity" and data["measurement"] != -1):
-        cloud_connect_socket.send_json(data)         
+        cloud_connect_socket.send_json(data)   
+        cloud_connect_socket.recv_json()        
     elif(data["sensor_type"]=="Smoke"):
-        cloud_connect_socket.send_json(data)         
+        cloud_connect_socket.send_json(data)     
+        cloud_connect_socket.recv_json()     
+    return    
 
 
 def obtain_data(sensor):
@@ -158,13 +152,31 @@ def health_system():
             main_proxy = False
             if(count_time > -1):
                 count_time -= 1
+            if(count_time == 0):
+                main_thread = threading.Thread(target=main)
+                main_thread.start()
             time.sleep(1)     
        
 def main():
     global control
     control = False
-    while True:
-        while not main_proxy and count_time < 0:
+    global sensor_connect_socket
+    global quality_system_socket
+    global cloud_connect_socket
+
+    try:
+        # Create the socket to connect to the sensors
+        sensor_connect_socket = context.socket(zmq.PULL)
+        sensor_connect_socket.connect(sensor_connect_address)
+
+        quality_system_socket = context.socket(zmq.REQ)
+        quality_system_socket.connect(quality_system_connect_address)
+
+        cloud_connect_socket = context.socket(zmq.REQ)
+        cloud_connect_socket.connect(cloud_connect_address)
+    
+    
+        while not main_proxy and count_time <= 0:
             if(not control):
                 logging.error("The main proxy is not available. Auxiliar proxy is taking the control.")
                 control = True
@@ -174,7 +186,14 @@ def main():
                 send_data(message)
 
             except zmq.Again as e:
-                time.sleep(0.5)
+                pass
+            except Exception as e:
+                logging.error(f"Error: {e}")
+    finally:
+        logging.info("Closing sockets...")
+        sensor_connect_socket.close()
+        quality_system_socket.close()
+        cloud_connect_socket.close()
    
 
 if __name__ == "__main__":
@@ -182,20 +201,14 @@ if __name__ == "__main__":
     health_system_thread = threading.Thread(target=health_system)
     health_system_thread.start()
 
-    main_thread = threading.Thread(target=main)
-    main_thread.start()
-
+    
     try:
         health_system_thread.join()
-        main_thread.join()
         
     except KeyboardInterrupt:
         logging.info("Keyboard interrupt detected. Closing the ZeroMQ context.")
     finally:
         logging.info("Closing sockets...")
-        sensor_connect_socket.close()
-        quality_system_socket.close()
-        cloud_connect_socket.close()
         health_system_socket.close()
         context.term()
 

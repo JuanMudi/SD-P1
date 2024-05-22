@@ -104,14 +104,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.reset == "True":
-
-        collections = db.list_collection_names()
-
-        # Dropear todas las colecciones
-        for collection_name in collections:
-            db.drop_collection(collection_name)
-            print(f"Dropped collection: {collection_name}")
-
+        client.drop_database("sensorsData")
         print("All collections dropped successfully.")
 
 

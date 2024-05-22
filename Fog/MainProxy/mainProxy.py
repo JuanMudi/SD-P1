@@ -74,6 +74,7 @@ def obtain_data(sensor):
 def analyze_data(data, sensor):
     try:
         documents_list = list(data)
+        logging.info(f"Documents list: {data}")
         if sensor == "Temperature":
             promedio = sum(d["measurement"] for d in documents_list) / len(documents_list)
             if RANGO_MIN_TEMPERATURA <= promedio <= RANGO_MAX_TEMPERATURA:

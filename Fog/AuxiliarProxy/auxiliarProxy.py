@@ -112,7 +112,7 @@ def analyze_data(data, sensor):
 
 
                 # Send alert to the cloud
-                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto"})
+                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
                 response_cloud = cloud_connect_socket.recv_json()
 
 
@@ -136,7 +136,7 @@ def analyze_data(data, sensor):
 
 
                 # Send alert to the cloud
-                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto"})
+                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
                 response_cloud = cloud_connect_socket.recv_json()
 
 
@@ -193,7 +193,7 @@ def main():
                 logging.error("The main proxy is not available. Auxiliar proxy is taking the control.")
                 control = True
             try:
-                message = sensor_bind_socket.recv_json(flags=zmq.NOBLOCK)
+                message = sensor_bind_socket.recv_json()
                 logging.info(f"Message: {message}")
                 send_data(message)
 

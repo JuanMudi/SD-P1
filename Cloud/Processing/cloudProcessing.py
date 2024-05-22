@@ -8,6 +8,10 @@ from pymongo import MongoClient
 import zmq
 
 
+# Humidity parameters
+RANGO_MIN_HUMEDAD = 70.0
+RANGO_MAX_HUMEDAD = 100.0
+
 def initialize():
     # Logs configuration
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -119,6 +123,27 @@ def processing_system_cloud():
         except Exception as e:
             logging.error(f"Unexpected error: {e}")
 
+def humidity_mensual_average():
+
+    while True:
+        try:
+            data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
+            promedio = sum(d["measurement"] for d in data) / len(data)
+        
+            if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
+                    logging.info(f"The humidity average is OK: {promedio}")
+            else:
+                logging.info(f"The humidity average is WRONG: {promedio}")
+                quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": "Humidity"})
+                response = quality_system_socket.recv_json()
+                logging.info(f"Quality system response: {response}")    
+        
+        except Exception as e:
+            logging.error(f"Error calculating the monthly average of humidity: {e}")
+            return None
+        time.sleep(20)
+    
+
 
 if __name__ == "__main__":
     initialize()
@@ -132,6 +157,13 @@ if __name__ == "__main__":
         client.drop_database("sensorsData")
         print("Database 'sensorsData' dropped successfully.")
 
+    humidity_mensual_average_thread = threading.Thread(target=humidity_mensual_average)
+    humidity_mensual_average_thread.start()
+
     main_proxy_socket_thread = threading.Thread(target=processing_system_cloud)
     main_proxy_socket_thread.start()
+
+
+
     main_proxy_socket_thread.join()
+    humidity_mensual_average_thread.join()

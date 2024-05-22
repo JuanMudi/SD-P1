@@ -117,7 +117,7 @@ def sensor_thread(sensor_type, config, sensor_id):
             
             if(sensor_type=="Smoke" and measurement==True):
                 quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
-                proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+                proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto", "layer" : "Edge"})
 
                 response = quality_system_socket.recv_json()
                 logging.info(f"Alert status: {response}")

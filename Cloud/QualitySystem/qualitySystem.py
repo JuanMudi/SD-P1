@@ -36,6 +36,8 @@ def quality_system_cloud():
                 quality_system_socket.send_json({"status": "recibido"})    
     except zmq.Again as e:
         time.sleep(1)
+    except Exception as e:
+        logging.error(f"Error receiving alerts: {e}")
 
 if __name__ == "__main__":
     quality_system_cloud()

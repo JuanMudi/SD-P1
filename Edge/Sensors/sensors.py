@@ -13,16 +13,16 @@ def __init__():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
     global proxy_bind_address, proxy_bind_address2
-    proxy_bind_address = "tcp://localhost:5555"
-    proxy_bind_address2 = "tcp://10.104.220.161:5555"
+    proxy_bind_address = "tcp://172.20.10.4:5555"
+    proxy_bind_address2 = "tcp://172.20.10.2:5555"
 
 
 
     global quality_system_connect_address
-    quality_system_connect_address = "tcp://10.51.51.183:5556"
+    quality_system_connect_address = "tcp://172.20.10.4:5556"
 
     global actuator_connect_address
-    actuator_connect_address = "tcp://10.51.51.183:5557"
+    actuator_connect_address = "tcp://172.20.10.4:5557"
 
     #Context creation
     global context
@@ -121,14 +121,19 @@ def sensor_thread(sensor_type, config, sensor_id):
 
         # Send the measurement to the proxy
         try:
+            if(message["measurement"]==True):
+                message["measurement"]="True"
+            else:
+                message["measurement"]="False"
+
             proxy_socket.send_json(message)
             proxy_socket2.send_json(message)
             logging.info(f"[{message["time"]}] {message["sensor_type"]}: {measurement}")  # Log the measurement
             
             if(sensor_type=="Smoke" and measurement==True):
-                quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
-                proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto", "layer" : "Edge"})
-                actuator_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+                quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": "True", "status": "incorrecto"})
+                proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": "True", "status": "incorrecto", "layer" : "Edge"})
+                actuator_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": "True", "status": "incorrecto"})
                 response = quality_system_socket.recv_json()
                 logging.info(f"Alert status: {response}")
 

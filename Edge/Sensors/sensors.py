@@ -121,14 +121,19 @@ def sensor_thread(sensor_type, config, sensor_id):
 
         # Send the measurement to the proxy
         try:
+            if(message["measurement"]==True):
+                message["measurement"]="True"
+            else:
+                message["measurement"]="False"
+
             proxy_socket.send_json(message)
             proxy_socket2.send_json(message)
             logging.info(f"[{message["time"]}] {message["sensor_type"]}: {measurement}")  # Log the measurement
             
             if(sensor_type=="Smoke" and measurement==True):
-                quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
-                proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto", "layer" : "Edge"})
-                actuator_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto"})
+                quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": "True", "status": "incorrecto"})
+                proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": "True", "status": "incorrecto", "layer" : "Edge"})
+                actuator_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": "True", "status": "incorrecto"})
                 response = quality_system_socket.recv_json()
                 logging.info(f"Alert status: {response}")
 

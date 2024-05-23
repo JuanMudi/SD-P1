@@ -160,6 +160,9 @@ def time_average():
 
         quality_system_socket.send_json({"message_type": "alert", "Latency": promedio, "layer": "Cloud"})
         response = quality_system_socket.recv_json()
+
+        quality_system_socket.send_json({"message_type": "alert", "message_counter": message_counter, "messages_size": messages_size, "layer": "Cloud"})
+        response = quality_system_socket.recv_json()
         logging.info(f"Quality system response: {response}")
 
          # Realizar la agregación para contar alertas por tipo de layer

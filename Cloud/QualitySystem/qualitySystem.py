@@ -1,45 +1,36 @@
 import zmq
 import logging
-import signal
-import sys
-import threading
 import time
 
-
-def __init__():
-    #Logs configuration
+def init():
+    # Logs configuration
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    global quality_system_address
+    global quality_system_socket
     quality_system_bind_address = "tcp://*:5580"
 
-    global quality_system_socket
-    quality_system_socket = zmq.Context().socket(zmq.REP)
+    context = zmq.Context()
+    quality_system_socket = context.socket(zmq.REP)
 
     try:
         quality_system_socket.bind(quality_system_bind_address)
     except Exception as e:
-        logging.error(f"Error creating sockets: " + str(e))
-        
-
+        logging.error(f"Error creating sockets: {str(e)}")
 
 def quality_system_cloud():
-    __init__()
+    init()
 
     logging.info("Starting quality system in the cloud layer...")
-    try:
-        while True:
+    while True:
+        try:
             message = quality_system_socket.recv_json(flags=zmq.NOBLOCK)
-
             if message["message_type"] == "alert":
                 logging.info(f"Alerta recibida en la capa cloud: {message}")
                 quality_system_socket.send_json({"status": "recibido"})    
-    except zmq.Again as e:
-        time.sleep(1)
-    except Exception as e:
-        logging.error(f"Error receiving alerts: {e}")
+        except zmq.Again:
+            time.sleep(1)
+        except Exception as e:
+            logging.error(f"Error receiving alerts: {e}")
 
 if __name__ == "__main__":
     quality_system_cloud()
-        
-   

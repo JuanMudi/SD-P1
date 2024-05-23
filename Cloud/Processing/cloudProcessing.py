@@ -66,62 +66,63 @@ def processing_system_cloud():
     global messages_size
 
     logging.info("Starting processing system in the cloud layer...")
-    while True:
-        try:
+    try:
+            while True:
 
-            message = fog_layer_socket.recv_json()
 
-            if message["message_type"] == "alert":
-                message_counter += 2
-                messages_size += getsizeof(message) * 2
-                logging.info(f"Alerta recibida en la capa cloud: {message}")
-                alerts_collection.insert_one(message)                
-                quality_system_socket.send_json({"message_type": "alert"})
-                quality_system_socket.recv_json()
-                fog_layer_socket.send_json({"status": "received"})
+                message = fog_layer_socket.recv_json()
 
-            elif message["message_type"] == "communication_time":
-                time_collection.insert_one(message)
-                fog_layer_socket.send_json({"status": "received"})
+                if message["message_type"] == "alert":
+                    message_counter += 2
+                    messages_size += getsizeof(message) * 2
+                    logging.info(f"Alerta recibida en la capa cloud: {message}")
+                    alerts_collection.insert_one(message)                
+                    quality_system_socket.send_json({"message_type": "alert"})
+                    quality_system_socket.recv_json()
+                    fog_layer_socket.send_json({"status": "received"})
 
-            elif message["message_type"] == "measurement":
-                message_counter += 1
-                messages_size += getsizeof(message)
-                logging.info(f"Data received in the cloud layer: {message}")
-                fog_layer_socket.send_json({"status": "received"})
+                elif message["message_type"] == "communication_time":
+                    time_collection.insert_one(message)
+                    fog_layer_socket.send_json({"status": "received"})
 
-                data = message
+                elif message["message_type"] == "measurement":
+                    message_counter += 1
+                    messages_size += getsizeof(message)
+                    logging.info(f"Data received in the cloud layer: {message}")
+                    fog_layer_socket.send_json({"status": "received"})
 
-                if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
-                    temperature_collection.insert_one(data)
-                    logging.info(f"Data saved in MongoDB: {data}")
+                    data = message
 
-                elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
-                    humidity_collection.insert_one(data)
-                    logging.info(f"Data saved in MongoDB: {data}")
+                    if data["sensor_type"] == "Temperature" and data["measurement"] != -1:
+                        temperature_collection.insert_one(data)
+                        logging.info(f"Data saved in MongoDB: {data}")
 
-                elif data["sensor_type"] == "Smoke":
-                    smoke_collection.insert_one(data)
-                    logging.info(f"Data saved in MongoDB: {data}")
+                    elif data["sensor_type"] == "Humidity" and data["measurement"] != -1:
+                        humidity_collection.insert_one(data)
+                        logging.info(f"Data saved in MongoDB: {data}")
 
-            elif message["message_type"] == "request":
-                if message["sensor_type"] == "Temperature":
-                    consulta = temperature_collection.find({}, {"_id": 0}).sort("time", -1).limit(10)
-                elif message["sensor_type"] == "Humidity":
-                    consulta = humidity_collection.find({}, {"_id": 0}).sort("time", -1).limit(10)
-                elif message["sensor_type"] == "Smoke":
-                    consulta = smoke_collection.find({}, {"_id": 0}).sort("time", -1).limit(10)
-                
-                logging.info(f"Data obtained from MongoDB: {consulta}")   
+                    elif data["sensor_type"] == "Smoke":
+                        smoke_collection.insert_one(data)
+                        logging.info(f"Data saved in MongoDB: {data}")
 
-                fog_layer_socket.send_json(list(consulta))
+                elif message["message_type"] == "request":
+                    if message["sensor_type"] == "Temperature":
+                        consulta = temperature_collection.find({}, {"_id": 0}).sort("time", -1).limit(10)
+                    elif message["sensor_type"] == "Humidity":
+                        consulta = humidity_collection.find({}, {"_id": 0}).sort("time", -1).limit(10)
+                    elif message["sensor_type"] == "Smoke":
+                        consulta = smoke_collection.find({}, {"_id": 0}).sort("time", -1).limit(10)
+                    
+                    logging.info(f"Data obtained from MongoDB: {consulta}")   
 
-        except zmq.Again as e:
-            time.sleep(1)
-        except zmq.ZMQError as e:
-            logging.error(f"Error: {e}")
-        except Exception as e:
-            logging.error(f"Unexpected error: {e}")
+                    fog_layer_socket.send_json(list(consulta))
+
+    except zmq.Again as e:
+        time.sleep(1)
+    except zmq.ZMQError as e:
+        logging.error(f"Error: {e}")
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
 
 def humidity_mensual_average():
 

@@ -101,7 +101,7 @@ def analyze_data(data, sensor):
                 logging.info(f"The humidity average is WRONG: {promedio}")
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
-                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
+                cloud_connect_socket.send_json({"message_type": "alert", "sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
                 response_cloud = cloud_connect_socket.recv_json()
                 logging.info(f"Quality system response: {response}")
                 logging.info(f"Cloud response: {response_cloud}")

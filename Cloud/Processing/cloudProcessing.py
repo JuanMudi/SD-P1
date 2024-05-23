@@ -131,19 +131,57 @@ def humidity_mensual_average():
             data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
             if  len(list(data)) != 0:
                
-                promedio = sum(d["measurement"] for d in data) / len(data)
+                promedio = sum(d["measurement"] for d in data) / len(list(data))
             
                 if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
                     logging.CRITICAL(f"The humidity average is OK: {promedio}")
                 else:
                     logging.CRITICAL(f"The humidity average is WRONG: {promedio}")
-                    quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": "Humidity"})
+                    quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": "Humidity", "layer": "Cloud"})
                     response = quality_system_socket.recv_json()
                     logging.info(f"Quality system response: {response}")    
             
         except Exception as e:
             logging.error(f"Error calculating the monthly average of humidity: {e}")
         time.sleep(20)
+
+def time_average():
+    while True: 
+        # Obtener todos los tiempos de comunicación
+        tiempos = []
+        for documento in time_collection.find({"message_type": "communication_time"}, {"_id": 0, "time": 1}):
+            tiempos.append(documento["time"])
+        
+        # Calcular el promedio
+        if tiempos:
+            promedio = sum(tiempos) / len(tiempos)
+        else:
+            promedio = 0
+
+        quality_system_socket.send_json({"message_type": "alert", "Latency": promedio, "layer": "Cloud"})
+        response = quality_system_socket.recv_json()
+        logging.info(f"Quality system response: {response}")
+
+         # Realizar la agregación para contar alertas por tipo de layer
+        pipeline = [
+            {"$group": {"_id": "$layer", "count": {"$sum": 1}}}
+        ]
+        
+        resultados = alerts_collection.aggregate(pipeline)
+        
+        # Crear un diccionario para almacenar los resultados
+        conteo_alertas = {"Cloud": 0, "Fog": 0, "Edge": 0}
+        for resultado in resultados:
+            layer = resultado["_id"]
+            if layer in conteo_alertas:  # Asegúrate de que solo se cuentan los valores esperados
+                conteo_alertas[layer] = resultado["count"]
+
+        quality_system_socket.send_json({"message_type": "alert", "conteo_alertas": conteo_alertas})
+
+        time.sleep(20)
+
+
+
     
 
 
@@ -165,7 +203,10 @@ if __name__ == "__main__":
     main_proxy_socket_thread = threading.Thread(target=processing_system_cloud)
     main_proxy_socket_thread.start()
 
+    time_average_thread = threading.Thread(target=time_average)
+    time_average_thread.start()
 
 
+    time_average_thread.join()
     main_proxy_socket_thread.join()
     humidity_mensual_average_thread.join()

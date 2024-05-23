@@ -19,8 +19,8 @@ def initialize():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     sensor_bind_address = "tcp://*:5555"
-    health_system_connect_address = "tcp://localhost:5558"
-    quality_system_connect_address = "tcp://localhost:5580"
+    health_system_connect_address = "tcp://10.104.220.161:5558"
+    quality_system_connect_address = "tcp://10.51.51.183:5580"
     cloud_connect_address = "tcp://54.92.238.228:5581"
 
     context = zmq.Context()

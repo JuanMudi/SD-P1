@@ -134,9 +134,9 @@ def humidity_mensual_average():
                 promedio = sum(d["measurement"] for d in data) / len(data)
             
                 if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
-                        logging.info(f"The humidity average is OK: {promedio}")
+                    logging.CRITICAL(f"The humidity average is OK: {promedio}")
                 else:
-                    logging.info(f"The humidity average is WRONG: {promedio}")
+                    logging.CRITICAL(f"The humidity average is WRONG: {promedio}")
                     quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": "Humidity"})
                     response = quality_system_socket.recv_json()
                     logging.info(f"Quality system response: {response}")    

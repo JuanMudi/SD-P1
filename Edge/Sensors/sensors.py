@@ -12,14 +12,17 @@ def __init__():
     #Logs configuration
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
-    global proxy_bind_address
+    global proxy_bind_address, proxy_bind_address2
     proxy_bind_address = "tcp://localhost:5555"
+    proxy_bind_address2 = "tcp://10.104.220.161:5555"
+
+
 
     global quality_system_connect_address
-    quality_system_connect_address = "tcp://localhost:5556"
+    quality_system_connect_address = "tcp://10.51.51.183:5556"
 
     global actuator_connect_address
-    actuator_connect_address = "tcp://localhost:5557"
+    actuator_connect_address = "tcp://10.51.51.183:5557"
 
     #Context creation
     global context
@@ -27,7 +30,7 @@ def __init__():
 
     #Socket creation
     global quality_system_socket
-    global proxy_socket
+    global proxy_socket, proxy_socket2
 
     try:
         quality_system_socket = context.socket(zmq.REQ)
@@ -35,6 +38,9 @@ def __init__():
 
         proxy_socket = context.socket(zmq.PUSH)
         proxy_socket.connect(proxy_bind_address)
+
+        proxy_socket2 = context.socket(zmq.PUSH)
+        proxy_socket2.connect(proxy_bind_address2)
 
     except Exception as e:
         logging.error(f"Error creating sockets: " + str(e))
@@ -113,6 +119,7 @@ def sensor_thread(sensor_type, config, sensor_id):
         # Send the measurement to the proxy
         try:
             proxy_socket.send_json(message)
+            proxy_socket2.send_json(message)
             logging.info(f"[{message["time"]}] {message["sensor_type"]}: {measurement}")  # Log the measurement
             
             if(sensor_type=="Smoke" and measurement==True):

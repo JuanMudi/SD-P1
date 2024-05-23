@@ -11,7 +11,7 @@ def __init__():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     global quality_system_address
-    quality_system_bind_address = "tcp://*:5580"
+    quality_system_bind_address = "tcp://*:5556"
 
     global quality_system_socket
     quality_system_socket = zmq.Context().socket(zmq.REP)

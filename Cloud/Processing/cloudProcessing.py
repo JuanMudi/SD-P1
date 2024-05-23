@@ -106,11 +106,11 @@ def processing_system_cloud():
 
             elif message["message_type"] == "request":
                 if message["sensor_type"] == "Temperature":
-                    data = temperature_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10)
+                    data = temperature_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
                 elif message["sensor_type"] == "Humidity":
-                    data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10)
+                    data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
                 elif message["sensor_type"] == "Smoke":
-                    data = smoke_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(10)
+                    data = smoke_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
                 
                 logging.info(f"Data obtained from MongoDB: {data}")   
 

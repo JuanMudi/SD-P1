@@ -156,7 +156,7 @@ def main(sensor_type, num_threads, config_files):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simulación de Sensores")
-    parser.add_argument("--sensor_type", type=str, required=True, choices=["Temperature", "Humedity", "Smoke"], help="Type of sensor")
+    parser.add_argument("--sensor_type", type=str, required=True, choices=["Temperature", "Humidity", "Smoke"], help="Type of sensor")
     parser.add_argument("--num_threads", type=int, default=1, help="Number of threads by sensor type")
     parser.add_argument("--config_files", type=str, nargs='+', required=True, help="Configuration files for sensors")
 

@@ -13,16 +13,16 @@ def __init__():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
     global proxy_bind_address, proxy_bind_address2
-    proxy_bind_address = "tcp://172.20.10.4:5555"
-    proxy_bind_address2 = "tcp://172.20.10.2:5555"
+    proxy_bind_address = "tcp://10.51.51.183:5555"
+    proxy_bind_address2 = "tcp://10.138.208.85:5555"
 
 
 
     global quality_system_connect_address
-    quality_system_connect_address = "tcp://172.20.10.4:5556"
+    quality_system_connect_address = "tcp://10.51.51.183:5556"
 
     global actuator_connect_address
-    actuator_connect_address = "tcp://172.20.10.4:5557"
+    actuator_connect_address = "tcp://10.51.51.183:5557"
 
     #Context creation
     global context

@@ -29,13 +29,13 @@ def quality_system_cloud():
     logging.info("Starting quality system in the cloud layer...")
     try:
         while True:
-            message = quality_system_socket.recv_json(flags=zmq.BLOCKY)
+            message = quality_system_socket.recv_json(flags=zmq.NOBLOCK)
 
             if message["message_type"] == "alert":
                 logging.info(f"Alerta recibida en la capa cloud: {message}")
                 quality_system_socket.send_json({"status": "recibido"})    
     except zmq.Again as e:
-        logging.error(f"Error receiving alerts: {e}") 
+        time.sleep(1)
 
 if __name__ == "__main__":
     quality_system_cloud()

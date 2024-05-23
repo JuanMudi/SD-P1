@@ -19,8 +19,8 @@ def initialize():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     sensor_bind_address = "tcp://*:5555"
-    health_system_connect_address = "tcp://172.20.10.2:5558"
-    quality_system_connect_address = "tcp://172.20.10.4:5580"
+    health_system_connect_address = "tcp://10.138.208.85:5558"
+    quality_system_connect_address = "tcp://10.51.51.183:5580"
     cloud_connect_address = "tcp://54.92.238.228:5581"
 
     context = zmq.Context()
@@ -89,9 +89,9 @@ def analyze_data(data, sensor):
                 logging.info(f"The temperature average is WRONG: {promedio}")
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
+                logging.info(f"Quality system response: {response}")
                 cloud_connect_socket.send_json({"message_type": "alert","sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog" })
                 response_cloud = cloud_connect_socket.recv_json()
-                logging.info(f"Quality system response: {response}")
                 logging.info(f"Cloud response: {response_cloud}")
         elif sensor == "Humidity":
             promedio = sum(d["measurement"] for d in documents_list) / len(documents_list)
@@ -101,9 +101,9 @@ def analyze_data(data, sensor):
                 logging.info(f"The humidity average is WRONG: {promedio}")
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
+                logging.info(f"Quality system response: {response}")
                 cloud_connect_socket.send_json({"message_type": "alert", "sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
                 response_cloud = cloud_connect_socket.recv_json()
-                logging.info(f"Quality system response: {response}")
                 logging.info(f"Cloud response: {response_cloud}")
     except Exception as e:
         logging.error(f"Error analyzing data: {e}")

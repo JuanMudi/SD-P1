@@ -137,7 +137,7 @@ def humidity_mensual_average():
                     logging.CRITICAL(f"The humidity average is OK: {promedio}")
                 else:
                     logging.CRITICAL(f"The humidity average is WRONG: {promedio}")
-                    quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": "Humidity", "layer": "Cloud"})
+                    quality_system_socket.send_json({"message_type": "alert", "Average": "{promedio}", "status": "incorrecto", "sensor_type": "Humidity", "layer": "Cloud"})
                     response = quality_system_socket.recv_json()
                     logging.info(f"Quality system response: {response}")    
             
@@ -158,10 +158,10 @@ def time_average():
         else:
             promedio = 0
 
-        quality_system_socket.send_json({"message_type": "alert", "Latency": promedio, "layer": "Cloud"})
+        quality_system_socket.send_json({"message_type": "alert", "Latency": "{promedio}", "layer": "Cloud"})
         response = quality_system_socket.recv_json()
 
-        quality_system_socket.send_json({"message_type": "alert", "message_counter": message_counter, "messages_size": messages_size, "layer": "Cloud"})
+        quality_system_socket.send_json({"message_type": "alert", "message_counter": "{message_counter}", "messages_size": "{messages_size}", "layer": "Cloud"})
         response = quality_system_socket.recv_json()
         logging.info(f"Quality system response: {response}")
 
@@ -179,7 +179,7 @@ def time_average():
             if layer in conteo_alertas:  # Asegúrate de que solo se cuentan los valores esperados
                 conteo_alertas[layer] = resultado["count"]
 
-        quality_system_socket.send_json({"message_type": "alert", "conteo_alertas": conteo_alertas})
+        quality_system_socket.send_json({"message_type": "alert", "conteo_alertas": "{conteo_alertas}"})
 
         time.sleep(20)
 

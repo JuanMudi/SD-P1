@@ -1,5 +1,5 @@
 {
-    "probabilidad_verdadero": 0.1,
-    "probabilidad_falso": 0.9,
+    "probabilidad_verdadero": 0.5,
+    "probabilidad_falso": 0.5,
     "frecuencia": 3
 }

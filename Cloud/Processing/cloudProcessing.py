@@ -100,7 +100,7 @@ def processing_system_cloud():
                     humidity_collection.insert_one(data)
                     logging.info(f"Data saved in MongoDB: {data}")
 
-                elif data["sensor_type"] == "Humo":
+                elif data["sensor_type"] == "Smoke":
                     smoke_collection.insert_one(data)
                     logging.info(f"Data saved in MongoDB: {data}")
 

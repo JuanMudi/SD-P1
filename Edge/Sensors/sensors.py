@@ -30,7 +30,7 @@ def __init__():
 
     #Socket creation
     global quality_system_socket
-    global proxy_socket, proxy_socket2
+    global proxy_socket, proxy_socket2, actuator_socket
 
     try:
         quality_system_socket = context.socket(zmq.REQ)
@@ -41,6 +41,9 @@ def __init__():
 
         proxy_socket2 = context.socket(zmq.PUSH)
         proxy_socket2.connect(proxy_bind_address2)
+
+        actuator_socket = context.socket(zmq.PUSH)
+        actuator_socket.connect(actuator_connect_address)
 
     except Exception as e:
         logging.error(f"Error creating sockets: " + str(e))
@@ -125,7 +128,7 @@ def sensor_thread(sensor_type, config, sensor_id):
             if(sensor_type=="Smoke" and measurement==True):
                 quality_system_socket.send_json({"sensor_type": sensor_type,"message_type": "alert", "measurement": measurement, "status": "incorrecto"})
                 proxy_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto", "layer" : "Edge"})
-
+                actuator_socket.send_json({"sensor_type": sensor_type, "message_type": "alert", "measurement": measurement, "status": "incorrecto"})
                 response = quality_system_socket.recv_json()
                 logging.info(f"Alert status: {response}")
 

@@ -76,9 +76,11 @@ def processing_system_cloud():
                     message_counter += 2
                     messages_size += getsizeof(message) * 2
                     logging.info(f"Alerta recibida en la capa cloud: {message}")
-                    alerts_collection.insert_one(message)                
+                    alerts_collection.insert_one(message)   
+                    logging.info("Sendig alert to quality system")             
                     quality_system_socket.send_json({"message_type": "alert"})
-                    quality_system_socket.recv_json()
+                    message = quality_system_socket.recv_json()
+                    logging.info(f"Quality system response: {message}")
                     fog_layer_socket.send_json({"status": "received"})
 
                 elif message["message_type"] == "communication_time":
@@ -159,9 +161,12 @@ def time_average():
         else:
             promedio = 0
 
+        logging.info(f"Average communication time: {promedio}")
         quality_system_socket.send_json({"message_type": "alert", "Latency": promedio, "layer": "Cloud"})
         response = quality_system_socket.recv_json()
+        logging.info(f"Quality system response: {response}")
 
+        logging.info("Messages counter and message size")
         quality_system_socket.send_json({"message_type": "alert", "message_counter": message_counter, "messages_size": messages_size, "layer": "Cloud"})
         response = quality_system_socket.recv_json()
         logging.info(f"Quality system response: {response}")
@@ -181,6 +186,8 @@ def time_average():
                 conteo_alertas[layer] = resultado["count"]
 
         quality_system_socket.send_json({"message_type": "alert", "conteo_alertas": conteo_alertas})
+        message = quality_system_socket.recv_json()
+        logging.info(f"Quality system response: {message}")
 
         time.sleep(20)
 

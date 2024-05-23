@@ -106,15 +106,15 @@ def processing_system_cloud():
 
             elif message["message_type"] == "request":
                 if message["sensor_type"] == "Temperature":
-                    data = temperature_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
+                    consulta = temperature_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
                 elif message["sensor_type"] == "Humidity":
-                    data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
+                    consulta = humidity_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
                 elif message["sensor_type"] == "Smoke":
-                    data = smoke_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
+                    consulta = smoke_collection.find({}, {"_id": 0}).sort("timestamp", 1).limit(10)
                 
-                logging.info(f"Data obtained from MongoDB: {data}")   
+                logging.info(f"Data obtained from MongoDB: {consulta}")   
 
-                fog_layer_socket.send_json(list(data))
+                fog_layer_socket.send_json(list(consulta))
 
         except zmq.Again as e:
             time.sleep(1)

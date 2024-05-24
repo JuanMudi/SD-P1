@@ -135,7 +135,7 @@ def humidity_mensual_average():
             size = len(data)
 
             if size > 0:
-                total_measurement = 0
+                total_measurement = 0.0
 
                 for d in data:
                     logging.warning(f"Data: {d}")

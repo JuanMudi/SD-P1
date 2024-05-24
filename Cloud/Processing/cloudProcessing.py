@@ -133,6 +133,7 @@ def humidity_mensual_average():
             data = list(data_cursor)
             logging.info(f"Data obtained for HUMIDITY from MongoDB: {data}")
             size = len(data)
+            promedio = 0.0
 
             if size > 0:
                 total_measurement = 0.0
@@ -142,7 +143,7 @@ def humidity_mensual_average():
                     total_measurement += d["measurement"]
 
                 logging.info(f"Total measurement: {total_measurement} + {size}")
-                promedio = total_measurement / size
+                promedio = total_measurement/size
                 logging.info(f"Promedio: {promedio}")
 
                 if 70.0 <= promedio  and  70.0 >= promedio:

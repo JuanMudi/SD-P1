@@ -143,8 +143,9 @@ def humidity_mensual_average():
 
                 logging.info(f"Total measurement: {total_measurement} + {size}")
                 promedio = total_measurement / size
+                logging.info(f"Promedio: {promedio}")
 
-                if RANGO_MIN_HUMEDAD <= promedio  and  RANGO_MAX_HUMEDAD >= promedio:
+                if 70.0 <= promedio  and  70.0 >= promedio:
                     logging.CRITICAL(f"The humidity average is OK: {promedio}")
                 else:
                     logging.CRITICAL(f"The humidity average is WRONG: {promedio}")

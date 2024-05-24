@@ -71,10 +71,11 @@ def processing_system_cloud():
 
 
                 message = fog_layer_socket.recv_json()
+                message_counter += 2
+                messages_size += getsizeof(message) * 2
 
                 if message["message_type"] == "alert":
-                    message_counter += 2
-                    messages_size += getsizeof(message) * 2
+                    
                     logging.info(f"Alerta recibida en la capa cloud: {message}")
                     logging.info("Sendig alert to quality system")             
                     quality_system_socket.send_json(message)                    
@@ -132,6 +133,7 @@ def humidity_mensual_average():
         try:
 
             data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
+            logging.info(f"Data obtained for HUMIDITY from MongoDB: {list(data)}")
             if  len(list(data)) != 0:
                
                 promedio = sum(d["measurement"] for d in data) / len(list(data))

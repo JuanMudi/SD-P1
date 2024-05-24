@@ -79,74 +79,46 @@ def send_data(data):
     except Exception as e:
         logging.error(f"Error sending data: {e}")
 
-
 def obtain_data(sensor):
     try:
         cloud_connect_socket.send_json({"message_type": "request", "sensor_type": sensor})
-        data = cloud_connect_socket.recv_json()      
-
+        data = cloud_connect_socket.recv_json()
         logging.info(f"Data obtained from cloud: {data}")
         return data
     except Exception as e:
         logging.error(f"Error obtaining data: {e}")
         return None
 
-
 def analyze_data(data, sensor):
     try:
         documents_list = list(data)
-        if(sensor=="Temperature"):
-            promedio = 0.0
-            for d in documents_list:
-                promedio += d["measurement"]
-            promedio = promedio/len(documents_list)
-
-            if(promedio>=RANGO_MIN_TEMPERATURA and promedio<=RANGO_MAX_TEMPERATURA):
+        logging.info(f"Documents list: {data}")
+        if sensor == "Temperature":
+            promedio = sum(d["measurement"] for d in documents_list) / len(documents_list)
+            if RANGO_MIN_TEMPERATURA <= promedio <= RANGO_MAX_TEMPERATURA:
                 logging.info(f"The temperature average is OK: {promedio}")
             else:
-                # Send alert to the quality system in the Fog layer
                 logging.info(f"The temperature average is WRONG: {promedio}")
-
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
-
-
-                # Send alert to the cloud
-                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
-                response_cloud = cloud_connect_socket.recv_json()
-
-
                 logging.info(f"Quality system response: {response}")
+                cloud_connect_socket.send_json({"message_type": "alert","sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog" })
+                response_cloud = cloud_connect_socket.recv_json()
                 logging.info(f"Cloud response: {response_cloud}")
-
-        elif(sensor=="Humidity"):
-            promedio = 0.0
-            for d in documents_list:
-                promedio += d["measurement"]
-            promedio = promedio/len(documents_list)
-
-            if(promedio>=RANGO_MIN_HUMEDAD and promedio<=RANGO_MAX_HUMEDAD):
+        elif sensor == "Humidity":
+            promedio = sum(d["measurement"] for d in documents_list) / len(documents_list)
+            if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
                 logging.info(f"The humidity average is OK: {promedio}")
             else:
-                # Send alert to the quality system in the Fog layer
                 logging.info(f"The humidity average is WRONG: {promedio}")
-
                 quality_system_socket.send_json({"message_type": "alert", "Average": promedio, "status": "incorrecto", "sensor_type": sensor})
                 response = quality_system_socket.recv_json()
-
-
-                # Send alert to the cloud
-                cloud_connect_socket.send_json({"sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
-                response_cloud = cloud_connect_socket.recv_json()
-
-
                 logging.info(f"Quality system response: {response}")
+                cloud_connect_socket.send_json({"message_type": "alert", "sensor_type": sensor, "measurement": promedio, "status": "incorrecto", "layer" : "Fog"})
+                response_cloud = cloud_connect_socket.recv_json()
                 logging.info(f"Cloud response: {response_cloud}")
-                    
-    
     except Exception as e:
-        logging.error(f"Error: {e}")
-
+        logging.error(f"Error analyzing data: {e}")
 def health_system():
     global main_proxy
     global count_time

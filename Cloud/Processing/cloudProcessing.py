@@ -134,7 +134,14 @@ def humidity_mensual_average():
             logging.info(f"Data obtained for HUMIDITY from MongoDB: {data}")
 
             if len(data) > 0:
-                promedio = sum(d["measurement"] for d in data) / len(data)
+                total_measurement = 0
+
+                for d in data:
+                    logging.warning(f"Data: {d}")
+                    total_measurement += d["measurement"]
+
+                logging.info(f"Total measurement: {total_measurement}")
+                promedio = total_measurement / len(data)
 
                 if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
                     logging.CRITICAL(f"The humidity average is OK: {promedio}")

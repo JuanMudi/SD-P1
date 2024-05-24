@@ -78,10 +78,10 @@ def processing_system_cloud():
                     
                     logging.info(f"Alerta recibida en la capa cloud: {message}")
                     logging.info("Sendig alert to quality system")             
-                    quality_system_socket.send_json(message)                    
-                    alerts_collection.insert_one(message)   
+                    quality_system_socket.send_json(message)                      
                     message = quality_system_socket.recv_json()
                     logging.info(f"Quality system response: {message}")
+                    alerts_collection.insert_one(message) 
                     fog_layer_socket.send_json({"status": "received"})
 
                 elif message["message_type"] == "communication_time":
@@ -128,26 +128,32 @@ def processing_system_cloud():
         logging.error(f"Unexpected error: {e}")
 
 def humidity_mensual_average():
-
     while True:
         try:
+            data_cursor = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
+            data = list(data_cursor)
+            logging.info(f"Data obtained for HUMIDITY from MongoDB: {data}")
 
-            data = humidity_collection.find({}, {"_id": 0}).sort("timestamp", -1).limit(5)
-            logging.info(f"Data obtained for HUMIDITY from MongoDB: {list(data)}")
-            if  len(list(data)) != 0:
-               
-                promedio = sum(d["measurement"] for d in data) / len(list(data))
-            
+            if data:
+                promedio = sum(d["measurement"] for d in data) / len(data)
+
                 if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
                     logging.CRITICAL(f"The humidity average is OK: {promedio}")
                 else:
                     logging.CRITICAL(f"The humidity average is WRONG: {promedio}")
-                    quality_system_socket.send_json({"message_type": "alert", "Average": "{promedio}", "status": "incorrecto", "sensor_type": "Humidity", "layer": "Cloud"})
+                    quality_system_socket.send_json({
+                        "message_type": "alert",
+                        "Average": f"{promedio}",
+                        "status": "incorrecto",
+                        "sensor_type": "Humidity",
+                        "layer": "Cloud"
+                    })
                     response = quality_system_socket.recv_json()
-                    logging.info(f"Quality system response: {response}")    
-            
+                    logging.info(f"Quality system response: {response}")
+        
         except Exception as e:
             logging.error(f"Error calculating the monthly average of humidity: {e}")
+        
         time.sleep(20)
 
 def time_average():

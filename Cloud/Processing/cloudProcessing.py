@@ -143,7 +143,7 @@ def humidity_mensual_average():
                     total_measurement += d["measurement"]
 
                 logging.info(f"Total measurement: {total_measurement} + {size}")
-                promedio = total_measurement/size
+                promedio = (total_measurement)/(size)
                 logging.info(f"Promedio: {promedio}")
 
                 if 70.0 <= promedio  and  70.0 >= promedio:

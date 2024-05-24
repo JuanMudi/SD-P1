@@ -133,7 +133,7 @@ def humidity_mensual_average():
             data = list(data_cursor)
             logging.info(f"Data obtained for HUMIDITY from MongoDB: {data}")
 
-            if data:
+            if len(data) > 0:
                 promedio = sum(d["measurement"] for d in data) / len(data)
 
                 if RANGO_MIN_HUMEDAD <= promedio <= RANGO_MAX_HUMEDAD:
@@ -156,47 +156,50 @@ def humidity_mensual_average():
         time.sleep(20)
 
 def time_average():
-    while True: 
-        # Obtener todos los tiempos de comunicación
-        tiempos = []
-        for documento in time_collection.find({"message_type": "communication_time"}, {"_id": 0, "time": 1}):
-            tiempos.append(documento["time"])
-        
-        # Calcular el promedio
-        if tiempos:
-            promedio = sum(tiempos) / len(tiempos)
-        else:
-            promedio = 0
+    try:
+        while True: 
+            # Obtener todos los tiempos de comunicación
+            tiempos = []
+            for documento in time_collection.find({"message_type": "communication_time"}, {"_id": 0, "time": 1}):
+                tiempos.append(documento["time"])
+            
+            # Calcular el promedio
+            if tiempos:
+                promedio = sum(tiempos) / len(tiempos)
+            else:
+                promedio = 0
 
-        logging.info(f"Average communication time: {promedio}")
-        quality_system_socket.send_json({"message_type": "alert", "Latency": promedio, "layer": "Cloud"})
-        response = quality_system_socket.recv_json()
-        logging.info(f"Quality system response: {response}")
+            logging.info(f"Average communication time: {promedio}")
+            quality_system_socket.send_json({"message_type": "alert", "Latency": promedio, "layer": "Cloud"})
+            response = quality_system_socket.recv_json()
+            logging.info(f"Quality system response: {response}")
 
-        logging.info("Messages counter and message size")
-        quality_system_socket.send_json({"message_type": "alert", "message_counter": message_counter, "messages_size": messages_size, "layer": "Cloud"})
-        response = quality_system_socket.recv_json()
-        logging.info(f"Quality system response: {response}")
+            logging.info("Messages counter and message size")
+            quality_system_socket.send_json({"message_type": "alert", "message_counter": message_counter, "messages_size": messages_size, "layer": "Cloud"})
+            response = quality_system_socket.recv_json()
+            logging.info(f"Quality system response: {response}")
 
-         # Realizar la agregación para contar alertas por tipo de layer
-        pipeline = [
-            {"$group": {"_id": "$layer", "count": {"$sum": 1}}}
-        ]
-        
-        resultados = alerts_collection.aggregate(pipeline)
-        
-        # Crear un diccionario para almacenar los resultados
-        conteo_alertas = {"Cloud": 0, "Fog": 0, "Edge": 0}
-        for resultado in resultados:
-            layer = resultado["_id"]
-            if layer in conteo_alertas:  # Asegúrate de que solo se cuentan los valores esperados
-                conteo_alertas[layer] = resultado["count"]
+            # Realizar la agregación para contar alertas por tipo de layer
+            pipeline = [
+                {"$group": {"_id": "$layer", "count": {"$sum": 1}}}
+            ]
+            
+            resultados = alerts_collection.aggregate(pipeline)
+            
+            # Crear un diccionario para almacenar los resultados
+            conteo_alertas = {"Cloud": 0, "Fog": 0, "Edge": 0}
+            for resultado in resultados:
+                layer = resultado["_id"]
+                if layer in conteo_alertas:  # Asegúrate de que solo se cuentan los valores esperados
+                    conteo_alertas[layer] = resultado["count"]
 
-        quality_system_socket.send_json({"message_type": "alert", "conteo_alertas": conteo_alertas})
-        message = quality_system_socket.recv_json()
-        logging.info(f"Quality system response: {message}")
+            quality_system_socket.send_json({"message_type": "alert", "conteo_alertas": conteo_alertas})
+            message = quality_system_socket.recv_json()
+            logging.info(f"Quality system response: {message}")
 
-        time.sleep(20)
+            time.sleep(20)
+    except Exception as e:
+        logging.error(f"Error calculating metrics: {e}")
 
 
 

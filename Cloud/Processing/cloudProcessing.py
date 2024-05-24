@@ -73,7 +73,7 @@ def processing_system_cloud():
                 message = fog_layer_socket.recv_json()
                 message_counter += 2
                 messages_size += getsizeof(message) * 2
-                aux = message
+                aux = message.copy()
                 if message["message_type"] == "alert":
                     alerts_collection.insert_one(aux)                     
                     logging.info(f"Alerta recibida en la capa cloud: {message}")

@@ -148,9 +148,9 @@ def humidity_mensual_average():
 
             if (69.9 < promedio) and (100.0 > promedio):
 
-                logging.CRITICAL(f"The humidity average is OK")
+                logging.info("The humidity average is OK")
             else:
-                logging.CRITICAL(f"The humidity average is WRONG")
+                logging.info(f"The humidity average is WRONG")
                 quality_system_socket.send_json({
                     "message_type": "alert",
                     "Average": promedio,
